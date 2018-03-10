@@ -41,6 +41,7 @@ def main():
     image = np.expand_dims(image, axis=0)
     pred = F.softmax(model(image)).data
     pred = pred[0].argmax(axis=0)
+    print(pred)
 
     color_map = make_color_map()
 

@@ -13,6 +13,8 @@ class ImageDataset(dataset_mixin.DatasetMixin):
         self.data_dir = data_dir
         self.data_list = os.path.join(self.data_dir, data_list)
         self.crop_size = crop_size
+        self.crop_h = self.crop_size[0]
+        self.crop_w = self.crop_size[1]
         self.img_ids = [i_id.strip() for i_id in open(self.data_list)]
 
         self.files = []
@@ -53,22 +55,21 @@ class ImageDataset(dataset_mixin.DatasetMixin):
 
         if pad_h > 0 or pad_w > 0:
             img_pad = cv2.copyMakeBorder(image, 0, pad_h, 0,
-                                         pad_w, cv2.BORDER_CONSTANT,
-                                         value=(0.0, 0.0, 0.0))
-            lbl_pad = cv2.copyMakeBorder(label, 0, pad_h, 0,
-                                         pad_w, cv2.BORDER_CONSTANT,
-                                         value=(255,))
+                pad_w, cv2.BORDER_CONSTANT,
+                value=(0.0, 0.0, 0.0))
+            label_pad = cv2.copyMakeBorder(label, 0, pad_h, 0,
+                pad_w, cv2.BORDER_CONSTANT,
+                value=(255,))
         else:
-            img_pad, lbl_pad = image, label
+            img_pad, label_pad = image, label
 
-        img_h, img_w = lbl_pad.shape
+        img_h, img_w = label_pad.shape
 
-        h_off = random.randint(0, img_h - self.crop_size[0])
-        w_off = random.randint(0, img_w - self.crop_size[1])
-        image = np.asarray(img_pad[h_off:h_off+self.crop_size[0],
-                                   w_off:w_off+self.crop_size[1]], np.float32)
-        label = np.asarray(lbl_pad[h_off:h_off+self.crop_size[0],
-                                   w_off:w_off+self.crop_size[1]], np.float32)
+        h_off = random.randint(0, img_h - self.crop_h)
+        w_off = random.randint(0, img_w - self.crop_w)
+
+        image = np.asarray(img_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
+        label = np.asarray(label_pad[h_off : h_off+self.crop_h, w_off : w_off+self.crop_w], np.float32)
 
         image = image.transpose((2, 0, 1))
         flip = np.random.choice(2) * 2 - 1
