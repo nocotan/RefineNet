@@ -8,11 +8,11 @@ from chainer import cuda
 from chainer import Variable
 from chainer import serializers
 from chainer.optimizer import WeightDecay
-from chainer.optimizers import Adam
+from chainer.optimizers import Adam, MomentumSGD
 from chainer.iterators import MultiprocessIterator
 
-from fcn.models import FCN
-from fcn.datasets import ImageDataset
+from refinenet.models import RefineResNet
+from refinenet.datasets import ImageDataset
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     if not os.path.exists(args.snapshot_dir):
         os.makedirs(args.snapshot_dir)
 
-    model = FCN(n_class=args.n_class)
+    model = RefineResNet(n_class=args.n_class)
     if args.model is not None:
         serializers.load_npz(args.model, model)
 
@@ -44,12 +44,13 @@ def main():
         xp = np
 
     optimizer = Adam()
+    #optimizer = MomentumSGD()
     optimizer.setup(model)
     optimizer.add_hook(WeightDecay(1e-5), "hook_wd")
 
     train_dataset = ImageDataset(args.data_dir,
                                  args.data_list,
-                                 crop_size=(160, 160))
+                                 crop_size=(320, 320))
     train_iterator = MultiprocessIterator(train_dataset,
                                           batch_size=args.batch_size,
                                           repeat=True,
@@ -67,7 +68,8 @@ def main():
         print("Step: {}, Loss: {}".format(step, loss.data))
         if step % args.save_steps == 0:
             serializers.save_npz(
-                os.path.join(args.snapshot_dir, "model_{}.npz".format(step))
+                os.path.join(args.snapshot_dir, "model_{}.npz".format(step)),
+                model
             )
 
         if step >= args.n_steps:

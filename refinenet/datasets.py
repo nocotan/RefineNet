@@ -9,7 +9,7 @@ from chainer.dataset import dataset_mixin
 
 
 class ImageDataset(dataset_mixin.DatasetMixin):
-    def __init__(self, data_dir, data_list, crop_size=(500, 500)):
+    def __init__(self, data_dir, data_list, crop_size=(300, 300)):
         self.data_dir = data_dir
         self.data_list = os.path.join(self.data_dir, data_list)
         self.crop_size = crop_size
